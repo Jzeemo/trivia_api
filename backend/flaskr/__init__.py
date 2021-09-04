@@ -273,25 +273,26 @@ def create_app(test_config=None):
         # load the request body
         body = request.get_json()
 
+        # get the category
+        categories = body.get('quiz_category')
+
         # get the previous questions
         previous = body.get('previous_questions')
-
-        # get the category
-        category = body.get('quiz_category')
+        
 
         # abort 400 if category or previous questions isn't found
-        if ((category is None) or (previous is None)):
+        if ((categories is None) or (previous is None)):
             abort(400)
 
         # load questions all questions if "ALL" is selected
-        if (category['id'] == 0):
+        if (categories['id'] == 0):
             questions = Question.query.all()
         # load questions for given category
         else:
-            questions = Question.query.filter_by(category=category['id']).all()
+            questions = Question.query.filter_by(category=categories['id']).all()
 
         # get total number of questions
-        total = len(questions)
+        total_question = len(questions)
 
         # picks a random question
         def get_random_question():
@@ -299,23 +300,23 @@ def create_app(test_config=None):
 
         # checks to see if question has already been used
         def check_if_used(question):
-            used = False
-            for q in previous:
-                if (q == question.id):
-                    used = True
+            used_question = False
+            for prev in previous:
+                if (prev == question.id):
+                    used_question = True
 
-            return used
+            return used_question
 
         # get random question
-        question = get_random_question()
+        random_question = get_random_question()
 
         # check if used, execute until unused question found
-        while (check_if_used(question)):
-            question = get_random_question()
+        while (check_if_used(random_question)):
+            random_question = get_random_question()
 
             # if all questions have been tried, return without question
             # necessary if category has <5 questions
-            if (len(previous) == total):
+            if (len(previous) == total_question):
                 return jsonify({
                     'success': True
                 })
@@ -323,7 +324,7 @@ def create_app(test_config=None):
         # return the question
         return jsonify({
             'success': True,
-            'question': question.format()
+            'question': random_question.format()
         })
     '''
     @TODO: 
